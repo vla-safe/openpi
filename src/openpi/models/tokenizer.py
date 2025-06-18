@@ -113,6 +113,7 @@ class FASTTokenizer:
             return np.zeros((action_horizon, action_dim), dtype=np.float32)
 
         # Extract actions from decoded tokens
+        # Remove the "Action: " prefix and the trailing "|" from the token sequence
         raw_action_tokens = np.array(
             self._paligemma_tokenizer.encode(decoded_tokens.split("Action: ")[1].split("|")[0].strip())
         )

@@ -50,9 +50,16 @@ class Args:
     port: int = 8000
     # Record the policy's behavior for debugging.
     record: bool = False
+    record_save_image: bool = False
+    save_name: str = "debug"
 
     # Specifies how to load the policy. If not provided, the default policy for the environment will be used.
     policy: Checkpoint | Default = dataclasses.field(default_factory=Default)
+    
+    # Extra arguments for sampling action from the policy
+    temperature: float = 0 # temperature for sampling from the policy
+    n_action_samples: int = 1 # number of action samples to generate from the policy
+    
 
 
 # Default checkpoints that should be used for each environment.
@@ -99,10 +106,19 @@ def create_policy(args: Args) -> _policy.Policy:
 def main(args: Args) -> None:
     policy = create_policy(args)
     policy_metadata = policy.metadata
+    
+    # A dirty way to impose temperature on the policy
+    if args.temperature > 0:
+        policy._sample_kwargs["temperature"] = args.temperature
+    policy._sample_kwargs["n_action_samples"] = args.n_action_samples
 
     # Record the policy's behavior.
     if args.record:
-        policy = _policy.PolicyRecorder(policy, "policy_records")
+        policy = _policy.PolicyRecorder(
+            policy, 
+            f"rollouts/{args.save_name}/policy_records",
+            args.record_save_image,
+        )
 
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
