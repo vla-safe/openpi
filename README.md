@@ -22,6 +22,8 @@ uv pip install -e third_party/libero
 
 ## Generate rollouts on LIBERO benchmark
 
+### Generate rollouts with 1 action sample per step
+
 Run with Pi0-FAST model:
 
 ```bash
@@ -68,6 +70,69 @@ python examples/libero/main.py \
     --args.task_suite_name ${SUITE_NAME} \
     --args.save_name ${POLICY}-${SUITE_NAME}
 
+```
+
+### Generate rollouts with 10 action samples per step
+
+Note that this is much slower than 1 action sample. 
+
+For Pi0-FAST model
+
+```bash
+# In the first terminal:
+POLICY=pi0fast
+SUITE_NAME=libero_10
+TEMP=0.5
+N_SAMPLES=10
+export CUDA_VISIBLE_DEVICES=0 
+uv run scripts/serve_policy.py \
+    --env LIBERO \
+    --record \
+    --temperature ${TEMP} \
+    --n_action_samples ${N_SAMPLES} \
+    --save_name ${POLICY}-${SUITE_NAME}-temp${TEMP}-sample${N_SAMPLES}
+
+# In the second terminal:
+POLICY=pi0fast
+SUITE_NAME=libero_10
+TEMP=0.5
+N_SAMPLES=10
+source examples/libero/.venv/bin/activate
+export PYTHONPATH=$PYTHONPATH:$PWD/third_party/libero
+python examples/libero/main.py \
+    --args.task_suite_name ${SUITE_NAME} \
+    --args.save_name ${POLICY}-${SUITE_NAME}-temp${TEMP}-sample${N_SAMPLES}
+```
+
+For Pi0 model
+
+```bash
+# In the first terminal:
+POLICY=pi0
+SUITE_NAME=libero_10
+TEMP=0.5
+N_SAMPLES=10
+export CUDA_VISIBLE_DEVICES=0 
+uv run scripts/serve_policy.py \
+    --env LIBERO \
+    --record \
+    --temperature ${TEMP} \
+    --n_action_samples ${N_SAMPLES} \
+    --save_name ${POLICY}-${SUITE_NAME}-temp${TEMP}-sample${N_SAMPLES} \
+    policy:checkpoint \
+    --policy.config pi0_libero \
+    --policy.dir s3://openpi-assets/checkpoints/pi0_libero
+
+# In the second terminal:
+POLICY=pi0
+SUITE_NAME=libero_10
+TEMP=0.5
+N_SAMPLES=10
+source examples/libero/.venv/bin/activate
+export PYTHONPATH=$PYTHONPATH:$PWD/third_party/libero
+python examples/libero/main.py \
+    --args.task_suite_name ${SUITE_NAME} \
+    --args.save_name ${POLICY}-${SUITE_NAME}-temp${TEMP}-sample${N_SAMPLES}
 ```
 
 
